@@ -1,0 +1,68 @@
+Your current submit.php and export.php are designed for a flat structure (1 table), whereas your updated schema is normalized into 6 related tables.
+To fix it, we need to:
+
+<?php
+$host = "localhost";
+$username = "root";
+$password = "";
+$database = "energy_audit";
+
+$conn = new mysqli($host, $username, $password, $database);
+if ($conn->connect_error) { die("Connection failed: " . $conn->connect_error); }
+
+// 1. Insert into audit table
+$stmt = $conn->prepare("INSERT INTO audit (address, contact_person, contact_info, year_built, building_type, square_footage, occupants, operating_hours) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt->bind_param("sssisiis",
+    $_POST['address'], $_POST['contact_person'], $_POST['contact_info'], $_POST['year_built'],
+    $_POST['building_type'], $_POST['square_footage'], $_POST['occupants'], $_POST['operating_hours']
+);
+$stmt->execute();
+$audit_id = $stmt->insert_id; // get last inserted audit ID
+$stmt->close();
+
+// 2. Insert into transformer_details
+$stmt = $conn->prepare("INSERT INTO transformer_details (transformer_id, audit_id, location, manufacturer, capacity_kva, voltage_rating, frequency_hz, type, temperature, cooling_type, installation_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt->bind_param("sissdssssss",
+    $_POST['transformer_id'], $audit_id, $_POST['location'], $_POST['manufacturer'],
+    $_POST['capacity'], $_POST['voltage_rating'], $_POST['frequency'], $_POST['type'],
+    $_POST['temperature'], $_POST['cooling_type'], $_POST['installation_date']
+);
+$stmt->execute();
+$stmt->close();
+
+// 3. Insert into motor_details
+$stmt = $conn->prepare("INSERT INTO motor_details (motor_id, audit_id, motor_rating_kw, motor_efficiency) VALUES (?, ?, ?, ?)");
+$stmt->bind_param("sidd",
+    $_POST['motor_id'], $audit_id, $_POST['motor_rating'], $_POST['motor_efficiency']
+);
+$stmt->execute();
+$stmt->close();
+
+// 4. Insert into chiller_plant_details
+$stmt = $conn->prepare("INSERT INTO chiller_plant_details (audit_id, chiller_capacity_tr, chiller_cop, running_hours) VALUES (?, ?, ?, ?)");
+$stmt->bind_param("iddi",
+    $audit_id, $_POST['chiller_capacity'], $_POST['chiller_cop'], $_POST['chiller_hours']
+);
+$stmt->execute();
+$stmt->close();
+
+// 5. Insert into fan_details
+$stmt = $conn->prepare("INSERT INTO fan_details (fan_id, audit_id, fan_power_w, fan_runtime_hours_per_day) VALUES (?, ?, ?, ?)");
+$stmt->bind_param("sidd",
+    $_POST['fan_id'], $audit_id, $_POST['fan_power'], $_POST['fan_runtime']
+);
+$stmt->execute();
+$stmt->close();
+
+// 6. Insert into observations_recommendations
+$stmt = $conn->prepare("INSERT INTO observations_recommendations (audit_id, observations, recommendations) VALUES (?, ?, ?)");
+$stmt->bind_param("iss",
+    $audit_id, $_POST['observations'], $_POST['recommendations']
+);
+$stmt->execute();
+$stmt->close();
+
+$conn->close();
+
+echo "✅ Data submitted successfully!";
+?>

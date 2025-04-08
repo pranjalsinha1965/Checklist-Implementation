@@ -1,0 +1,13 @@
+Next Steps
+
+Go to phpMyAdmin > Your database > SQL tab, and paste the above code.
+
+Hit Go ✅
+
+Tables will be created. You can now:
+1. Build your form to insert into all 6 tables
+2. Use mysqli_insert_id($conn) to get audit_id after inserting into audit.
+
+🔄 How Data Will Be Related
+The audit table is the parent. All others (transformer, motor, chiller, fan, observations) are linked using audit_id. When you insert into audit, grab its audit_id and use it as foreign key in the other tables.
+

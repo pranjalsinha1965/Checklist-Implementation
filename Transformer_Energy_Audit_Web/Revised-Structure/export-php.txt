@@ -1,0 +1,52 @@
+<?php
+$host = "localhost";
+$username = "root";
+$password = "";
+$database = "energy_audit";
+
+$conn = new mysqli($host, $username, $password, $database);
+if ($conn->connect_error) { die("Connection failed: " . $conn->connect_error); }
+
+header('Content-Type: text/csv');
+header('Content-Disposition: attachment; filename="audit_export.csv"');
+
+$output = fopen('php://output', 'w');
+
+fputcsv($output, [
+    'address','contact_person','contact_info','year_built','building_type','square_footage','occupants','operating_hours',
+    'transformer_id','location','manufacturer','capacity','voltage_rating','frequency','type','temperature','cooling_type','installation_date',
+    'motor_id','motor_rating','motor_efficiency',
+    'chiller_capacity','chiller_cop','chiller_hours',
+    'fan_id','fan_power','fan_runtime',
+    'observations','recommendations'
+]);
+
+$sql = "
+SELECT 
+    a.address, a.contact_person, a.contact_info, a.year_built, a.building_type, a.square_footage, a.occupants, a.operating_hours,
+    t.transformer_id, t.location, t.manufacturer, t.capacity_kva, t.voltage_rating, t.frequency_hz, t.type, t.temperature, t.cooling_type, t.installation_date,
+    m.motor_id, m.motor_rating_kw, m.motor_efficiency,
+    c.chiller_capacity_tr, c.chiller_cop, c.running_hours,
+    f.fan_id, f.fan_power_w, f.fan_runtime_hours_per_day,
+    o.observations, o.recommendations
+FROM audit a
+LEFT JOIN transformer_details t ON a.audit_id = t.audit_id
+LEFT JOIN motor_details m ON a.audit_id = m.audit_id
+LEFT JOIN chiller_plant_details c ON a.audit_id = c.audit_id
+LEFT JOIN fan_details f ON a.audit_id = f.audit_id
+LEFT JOIN observations_recommendations o ON a.audit_id = o.audit_id
+";
+
+$result = $conn->query($sql);
+while ($row = $result->fetch_assoc()) {
+    fputcsv($output, $row);
+}
+
+fclose($output);
+$conn->close();
+?>
+
+Note: 
+
+Now your submit.php inserts data across all 6 tables.
+Your export.php joins and exports full row data as CSV.
