@@ -101,7 +101,7 @@ CREATE TABLE audit_data (
 
 ### 7. 📷 Screenshots & Deployment Docs
  - Refer to:
- - 📎 GitHub: Checklist-Implementation[https://github.com/pranjalsinha1965/Checklist-Implementation/tree/main]
+ - 📎 GitHub: Checklist-Implementation[GitHub Repository](https://github.com/pranjalsinha1965/Checklist-Implementation/tree/main)
  - 📎 Project Report: Checklist-Report.docx in the repo.
 
 ### 8. 🚀 Future Enhancements
